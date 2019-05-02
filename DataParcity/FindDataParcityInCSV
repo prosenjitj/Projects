@@ -1,0 +1,89 @@
+import argparse
+from os import listdir
+from os.path import isfile, join
+
+
+class FindDataParcityInCSV() :
+
+    def __init__(self, csvFolderPath=None) :
+        self.csvFolderPath = csvFolderPath
+
+    # Get Data from CSV
+    def getDataFromCSV(self , filePath):
+        missingData = {}
+        lineNumber = 0
+        with open(filePath, 'r') as csvFile:
+            cols = []
+            for line in csvFile:
+                valArr = line.strip().split(',')
+                if lineNumber == 0 :
+                    cols = valArr
+                    for data in valArr:
+                        missingData[data.strip()] = 0
+                else :
+                    colNumber = 0
+                    for data in valArr:
+                        if not data or len(data.strip()) == 0 or data == 'null':
+                            missingData[cols[colNumber].strip()] += 1
+                        colNumber += 1
+
+                lineNumber += 1
+
+        # Calculate the percentage
+        reportStat = ""
+        for colName , mNum in missingData.items() :
+            if mNum > 0 :
+                # lineNum = total line - header
+                reportStat += colName + ':'+ str(int(mNum * 100 / (lineNumber - 1))) + "%\t"
+
+        return missingData , reportStat , (lineNumber -1)
+
+    # Report
+    def printReport(self , statement ,seperator):
+        print(seperator.join(statement))
+
+    # Get CSV from Folder
+    def readAllCSVs(self):
+        csvfiles = [f for f in listdir(self.csvFolderPath) if isfile(join(self.csvFolderPath, f))]
+        globalReport = {}
+        numberOfFiles = 0
+        self.printReport(['Individual Sparsity :'], '')
+        rowLength = {}
+
+        for csvFile in csvfiles :
+            missingData , reportStat , lineNumber = self.getDataFromCSV(join(self.csvFolderPath, csvFile))
+            numberOfFiles += 1
+            self.printReport([csvFile , '\t->\t', reportStat ], '')
+            for colName , mNum in missingData.items() :
+                if colName in globalReport.keys() :
+                    globalReport[colName] += mNum
+                else :
+                    globalReport[colName] = mNum
+
+                try :
+                    rowLength[colName] += lineNumber
+                except :
+                    rowLength[colName] = 1
+
+        self.printReport(['Global Sparsity :'], '')
+
+        reportStat = ""
+        for colName , mNum in globalReport.items() :
+            if mNum > 0 :
+                # lineNum = total line - header
+                self.printReport([colName , str(mNum) , str(rowLength[colName])], ' ')
+                reportStat += colName + ':'+ str(int(mNum * 100 / rowLength[colName] )) + "%\t"
+
+        self.printReport([reportStat], '')
+        return
+
+def main():
+    arg_parser = argparse.ArgumentParser(description='Find Data Parcity')
+    arg_parser.add_argument('-c', '--csv', help='Path to CSV Dump files', required=True)
+
+    # args = arg_parser.parse_args()
+    # FindDataParcityInCSV(csvFolderPath=args.csv).readAllCSVs()
+    FindDataParcityInCSV(csvFolderPath="/Users/prosenjitdas/Desktop/orderdata/csv").readAllCSVs()
+
+if __name__ == '__main__':
+    main()

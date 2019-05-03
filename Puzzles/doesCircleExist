@@ -1,0 +1,46 @@
+#!/bin/python3
+
+import math
+import os
+import random
+import re
+import sys
+
+
+
+#
+# Complete the 'doesCircleExist' function below.
+#
+# The function is expected to return a STRING_ARRAY.
+# The function accepts STRING_ARRAY commands as parameter.
+#
+directionGraph = {'NL':'E' , 'NR' : 'W', 'EL':'S', 'ER':'N', 'WL':'N' , 'WR':'S', 'SL':'W' , 'SR':'E'}
+def doesCircleExist(commands):
+    # Write your code here
+    output = []
+    for command in commands :
+        output.append(isCirclularMovement(command))
+    return output
+
+def isCirclularMovement(command) :
+    startedAt = 'N'
+    changedDirection = startedAt
+    for indx in range(len(command)):
+        if command[indx] != 'G' :
+            changedDirection = directionGraph[changedDirection + command[indx]]
+
+    if changedDirection == startedAt :
+        return 'NO'
+    return 'YES'
+if __name__ == '__main__':
+    commands_count = 4
+
+    commands = []
+
+    for _ in range(commands_count):
+        commands_item = input()
+        commands.append(commands_item)
+
+    result = doesCircleExist(commands)
+
+    print(result)
